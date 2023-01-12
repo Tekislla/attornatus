@@ -4,15 +4,20 @@ import com.attornatus.dto.EnderecoCadastroDTO;
 import com.attornatus.entity.Endereco;
 import com.attornatus.entity.Pessoa;
 import com.attornatus.repository.EnderecoRepository;
+import com.attornatus.repository.PessoaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class EnderecoService {
     @Autowired
     EnderecoRepository repo;
+
+    @Autowired
+    PessoaRepository pessoaRepository;
 
     public Endereco criaEndereco(EnderecoCadastroDTO dto, Long pessoaId) {
         Endereco e = new Endereco();
@@ -28,11 +33,25 @@ public class EnderecoService {
         return e;
     }
 
-    public void adicionaEndereco(Pessoa p, Endereco e) {
-        if (p.getEnderecos().isEmpty()) {
+    public Endereco adicionaEndereco(Pessoa p, EnderecoCadastroDTO dto) {
+        Endereco e = criaEndereco(dto, p.getId());
+
+        if (p.getEnderecos() == null || p.getEnderecos().isEmpty()) {
             p.setEnderecos(Arrays.asList(e));
         } else {
+            p.getEnderecos().forEach(endereco -> endereco.setEnderecoPrincipal(false));
             p.getEnderecos().add(e);
         }
+
+        pessoaRepository.save(p);
+        return e;
+    }
+
+    public List<Endereco> listEnderecosByPessoa(Long pessoaId) {
+        return repo.findByPessoaId(pessoaId);
+    }
+
+    public Endereco findEnderecoPrincipal(Long pessoaId) {
+        return repo.findByPessoaIdAndEnderecoPrincipal(pessoaId, true);
     }
 }

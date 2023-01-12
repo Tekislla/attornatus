@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.websocket.server.PathParam;
+import java.util.List;
 
 @RestController
 @RequestMapping(value = "/pessoa")
@@ -33,13 +33,13 @@ public class PessoaController {
         }
     }
 
-    @PostMapping(value = "/editar/{id}")
-    public ResponseEntity<Pessoa> editarPessoa(@PathParam("id") Long id, @RequestBody PessoaCadastroDTO dto) {
+    @PostMapping(value = "/{id}")
+    public ResponseEntity<Pessoa> editarPessoa(@PathVariable("id") Long id, @RequestBody PessoaCadastroDTO dto) {
         Pessoa p = service.findById(id);
 
         if (p != null) {
             try {
-                return ResponseEntity.ok(service.editarPessoa(id, dto));
+                return ResponseEntity.ok(service.editarPessoa(p, dto));
             } catch (Exception e) {
                 return ResponseEntity.badRequest().build();
             }
@@ -49,7 +49,7 @@ public class PessoaController {
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<Pessoa> findById(@PathParam("id") Long id) {
+    public ResponseEntity<Pessoa> findById(@PathVariable("id") Long id) {
         Pessoa p = service.findById(id);
 
         if (p != null) {
@@ -57,5 +57,10 @@ public class PessoaController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Pessoa>> listAll() {
+        return ResponseEntity.ok(service.listAll());
     }
 }

@@ -9,9 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
+import java.util.*;
 
 @Service
 public class PessoaService {
@@ -27,15 +25,12 @@ public class PessoaService {
 
         p.setNome(dto.getNome());
         p.setDataNascimento(dataNascimento);
-        p.setEnderecos(new ArrayList<Endereco>());
 
         repo.save(p);
         return p;
     }
 
-    public Pessoa editarPessoa(Long id, PessoaCadastroDTO dto) throws ParseException {
-        Pessoa p = findById(id);
-
+    public Pessoa editarPessoa(Pessoa p, PessoaCadastroDTO dto) throws ParseException {
         if (dto.getNome() != null) {
             p.setNome(dto.getNome());
         }
@@ -45,19 +40,38 @@ public class PessoaService {
             p.setDataNascimento(dataNascimento);
         }
 
+        repo.save(p);
         return p;
     }
 
     public Pessoa cadastraPessoaComEndereco(PessoaCadastroDTO dto) throws ParseException {
         Pessoa p = criaPessoa(dto);
-        Endereco e = enderecoService.criaEndereco(dto.getEndereco(), p.getId());
-        enderecoService.adicionaEndereco(p, e);
+        enderecoService.adicionaEndereco(p, dto.getEndereco());
 
         return p;
     }
 
     public Pessoa findById(Long id) {
-        return repo.findById(id).get();
+        Optional<Pessoa> p = repo.findById(id);
+
+        if (p.isPresent()) {
+            List<Endereco> enderecos = enderecoService.listEnderecosByPessoa(id);
+            p.get().setEnderecos(enderecos);
+
+            return p.get();
+        } else {
+            return null;
+        }
+    }
+
+    public List<Pessoa> listAll() {
+        List<Pessoa> pessoas = (List<Pessoa>) repo.findAll();
+        pessoas.forEach(p -> {
+            List<Endereco> enderecos = enderecoService.listEnderecosByPessoa(p.getId());
+            p.setEnderecos(enderecos);
+        });
+
+        return pessoas;
     }
 
 }
